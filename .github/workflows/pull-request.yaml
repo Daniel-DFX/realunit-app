@@ -53,7 +53,7 @@ jobs:
     # Same self-hosted runner as Visual Regression. macos-latest cancelled
     # uninstrumented `flutter test --exclude-tags golden` at 91 and 120
     # minutes; this runner finishes the suite in minutes. One slot: Visual
-    # Regression timeout is 30 so it can wait if this job holds the runner.
+    # Regression waits in the queue (job timeout starts only when it runs).
     runs-on: [self-hosted, macOS, ARM64, m3-ultra, realunit-app]
     timeout-minutes: 30
     steps:
@@ -70,16 +70,12 @@ jobs:
       - run: bash scripts/run-handbook-flows.sh --matcher-self-test
       - run: flutter analyze
       # Excludes the `golden` tag: visual-regression tests live under
-      # `test/goldens/` and are validated on the self-hosted runner
-      # in the parallel `golden-tests` job (Hardware-Determinismus, see
-      # `docs/visual-regression-tests.md`). Running them here too would
-      # both duplicate work and erroneously red this job on macos-latest
-      # where the Skia/font-rendering does not match the committed
-      # baselines.
+      # `test/goldens/` and are validated in the parallel `golden-tests`
+      # job (see `docs/visual-regression-tests.md`). Running them here
+      # too would duplicate that work.
       - run: flutter test --exclude-tags golden
       # Instrument only the coverage-floor surface. Widget/integration tests
-      # still run in the step above; they must not be compiled with coverage
-      # or macos-latest exceeds the job timeout.
+      # still run in the step above without coverage instrumentation.
       - name: Collect coverage for the floor surface
         run: |
           set -euo pipefail
@@ -312,22 +308,20 @@ jobs:
   # and PRs that drift from them fail this job. Bootstrap and re-generation
   # is documented in `docs/visual-regression-tests.md`.
   #
-  # Runs parallel to `build` (which uses GitHub-hosted macos-latest). The
-  # separation is intentional:
-  #  * `build` covers analyze + unit/widget tests + coverage — needs no
-  #    hardware determinism.
-  #  * `golden-tests` covers pixel-exact rendering — must run on the self-hosted runner so
-  #    baselines and validation use identical Skia/font-rendering state.
+  # Shares the one-slot self-hosted runner with `build`. Job purpose stays
+  # split: `build` is analyze + unit/widget tests + coverage; this job is
+  # pixel-exact goldens. Queue wait does not count toward `timeout-minutes`.
   #
-  # On self-hosted runner outage: temporarily flip `runs-on:` to `macos-15` and regenerate
-  # baselines in the same PR (see `docs/visual-regression-tests.md`).
+  # On self-hosted runner outage: temporarily flip `runs-on:` on both this
+  # job and `build` to `macos-15` and regenerate baselines in the same PR
+  # (see `docs/visual-regression-tests.md`).
   golden-tests:
     name: Visual Regression
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: [self-hosted, macOS, ARM64, m3-ultra, realunit-app]
-    # Analyze & Test now shares this one-slot runner. The job itself still
-    # finishes in ~1 minute; 30 lets it wait if Analyze holds the slot first.
-    timeout-minutes: 30
+    # Keep in sync with `golden-regenerate.yaml`. A wedged golden job must
+    # not hold the one slot past 15 minutes.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
