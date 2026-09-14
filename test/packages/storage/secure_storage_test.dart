@@ -501,6 +501,53 @@ void main() {
       );
     });
 
+    test('getOrCreateMnemonicKey does not mint before migration flag', () async {
+      final storage = SecureStorage.withStorage(
+        mockStorage,
+        isolateFromWalletKit: true,
+      );
+      when(
+        () => mockStorage.read(key: 'wallet.mnemonic.encryption.key'),
+      ).thenAnswer((_) async => null);
+      when(
+        () => mockStorage.read(key: 'secure.storage.namespaced'),
+      ).thenAnswer((_) async => null);
+
+      await expectLater(
+        storage.getOrCreateMnemonicKey(),
+        throwsA(isA<StateError>()),
+      );
+      verifyNever(
+        () => mockStorage.write(
+          key: 'wallet.mnemonic.encryption.key',
+          value: any(named: 'value'),
+        ),
+      );
+    });
+
+    test('getOrCreateMnemonicKey mints after migration flag', () async {
+      final storage = SecureStorage.withStorage(
+        mockStorage,
+        isolateFromWalletKit: true,
+      );
+      when(
+        () => mockStorage.read(key: 'wallet.mnemonic.encryption.key'),
+      ).thenAnswer((_) async => null);
+      when(
+        () => mockStorage.read(key: 'secure.storage.namespaced'),
+      ).thenAnswer((_) async => '1');
+
+      final result = await storage.getOrCreateMnemonicKey();
+
+      expect(result, hasLength(32));
+      verify(
+        () => mockStorage.write(
+          key: 'wallet.mnemonic.encryption.key',
+          value: any(named: 'value'),
+        ),
+      ).called(1);
+    });
+
     test('generates and persists a fresh 32-byte key when none exists', () async {
       String? captured;
       when(
@@ -646,20 +693,27 @@ void main() {
       );
     });
 
-    test('does not overwrite a namespaced key that already has a value', () async {
+    test('overwrites a namespaced key that differs from the legacy value', () async {
       final namespaced = _MockFlutterSecureStorage();
       final legacy = _MockFlutterSecureStorage();
+      final store = <String, String>{
+        'pin.credential': 'already:present',
+      };
 
-      when(() => namespaced.read(key: any(named: 'key'))).thenAnswer((_) async => null);
-      when(
-        () => namespaced.read(key: 'pin.credential'),
-      ).thenAnswer((_) async => 'already:present');
+      when(() => namespaced.read(key: any(named: 'key'))).thenAnswer((invocation) async {
+        final key = invocation.namedArguments[#key] as String;
+        return store[key];
+      });
       when(
         () => namespaced.write(
           key: any(named: 'key'),
           value: any(named: 'value'),
         ),
-      ).thenAnswer((_) async {});
+      ).thenAnswer((invocation) async {
+        final key = invocation.namedArguments[#key] as String;
+        final value = invocation.namedArguments[#value] as String;
+        store[key] = value;
+      });
       when(() => legacy.read(key: any(named: 'key'))).thenAnswer((_) async => null);
       when(
         () => legacy.read(key: 'pin.credential'),
@@ -671,12 +725,52 @@ void main() {
       );
       await storage.migrateFromUnnamespacedStoreIfNeeded(legacy: legacy);
 
-      verifyNever(
+      verify(
+        () => namespaced.write(key: 'pin.credential', value: 'legacy:value'),
+      ).called(1);
+      verify(
+        () => namespaced.write(key: 'secure.storage.namespaced', value: '1'),
+      ).called(1);
+    });
+
+    test('dest value that differs from legacy is overwritten', () async {
+      final namespaced = _MockFlutterSecureStorage();
+      final legacy = _MockFlutterSecureStorage();
+      final store = <String, String>{
+        'wallet.mnemonic.encryption.key': 'minted-wrong',
+      };
+
+      when(() => namespaced.read(key: any(named: 'key'))).thenAnswer((invocation) async {
+        final key = invocation.namedArguments[#key] as String;
+        return store[key];
+      });
+      when(
         () => namespaced.write(
-          key: 'pin.credential',
+          key: any(named: 'key'),
           value: any(named: 'value'),
         ),
+      ).thenAnswer((invocation) async {
+        final key = invocation.namedArguments[#key] as String;
+        final value = invocation.namedArguments[#value] as String;
+        store[key] = value;
+      });
+      when(() => legacy.read(key: any(named: 'key'))).thenAnswer((_) async => null);
+      when(
+        () => legacy.read(key: 'wallet.mnemonic.encryption.key'),
+      ).thenAnswer((_) async => 'legacy-mnemonic');
+
+      final storage = SecureStorage.withStorage(
+        namespaced,
+        isolateFromWalletKit: true,
       );
+      await storage.migrateFromUnnamespacedStoreIfNeeded(legacy: legacy);
+
+      verify(
+        () => namespaced.write(
+          key: 'wallet.mnemonic.encryption.key',
+          value: 'legacy-mnemonic',
+        ),
+      ).called(1);
       verify(
         () => namespaced.write(key: 'secure.storage.namespaced', value: '1'),
       ).called(1);

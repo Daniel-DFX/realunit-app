@@ -118,7 +118,8 @@ class SecureStorage {
       try {
         final value = await legacy.read(key: key);
         if (value == null) continue;
-        if (await _secureStorage.read(key: key) != null) continue;
+        final dest = await _secureStorage.read(key: key);
+        if (dest == value) continue;
         await _secureStorage.write(key: key, value: value);
         final written = await _secureStorage.read(key: key);
         if (written != value) {
@@ -333,6 +334,14 @@ class SecureStorage {
   Future<Uint8List> getOrCreateMnemonicKey() async {
     final existing = await _secureStorage.read(key: _mnemonicEncryptionKey);
     if (existing != null) return base64.decode(existing);
+    if (_isolateFromWalletKit) {
+      final migrated = await _secureStorage.read(key: _namespaceMigrationKey);
+      if (migrated != '1') {
+        throw StateError(
+          'Mnemonic encryption key missing before namespaced migration completed.',
+        );
+      }
+    }
     final key = _secureRandomBytes(32);
     await _secureStorage.write(key: _mnemonicEncryptionKey, value: base64.encode(key));
     return key;
