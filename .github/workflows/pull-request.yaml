@@ -51,11 +51,11 @@ jobs:
     # that isn't a draft".
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: macos-latest
-    # macos-latest Analyze & Test with --coverage ran past 120 minutes on
-    # this branch (WalletConnect matrix plus pairing-error, migrate, and
-    # storage tests). 180 leaves headroom without holding a cancelled
-    # coverage-floor forever.
-    timeout-minutes: 180
+    # Full-suite `--coverage` on macos-latest ran past 180 minutes and
+    # cancelled before Coverage Floor. Pass/fail the suite uninstrumented,
+    # then collect coverage only on packages + cubit/bloc tests (the floor
+    # surface). 90 covers that split without holding a cancelled floor.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -76,7 +76,16 @@ jobs:
       # both duplicate work and erroneously red this job on macos-latest
       # where the Skia/font-rendering does not match the committed
       # baselines.
-      - run: flutter test --coverage --exclude-tags golden
+      - run: flutter test --exclude-tags golden
+      # Instrument only the coverage-floor surface. Widget/integration tests
+      # still run in the step above; they must not be compiled with coverage
+      # or macos-latest exceeds the job timeout.
+      - name: Collect coverage for the floor surface
+        run: |
+          set -euo pipefail
+          cubit_tests=$(find test/screens \( -name '*cubit*_test.dart' -o -name '*bloc*_test.dart' \))
+          # shellcheck disable=SC2086
+          flutter test --coverage --exclude-tags golden test/packages/ ${cubit_tests}
 
       # Narrow the coverage report to the README-defined activated surface:
       #   lib/packages/**             — services, repositories, signers, utils
