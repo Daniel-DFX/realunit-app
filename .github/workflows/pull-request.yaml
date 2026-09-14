@@ -50,18 +50,19 @@ jobs:
     # always run — the condition is "anything that isn't a PR, or a PR
     # that isn't a draft".
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: macos-latest
-    # Full-suite `--coverage` on macos-latest ran past 180 minutes.
-    # Pass/fail is uninstrumented, then coverage on packages + cubit/bloc
-    # tests. Uninstrumented still ran past 90 minutes; 120 covers the split.
-    timeout-minutes: 120
+    # Same self-hosted runner as Visual Regression. macos-latest cancelled
+    # uninstrumented `flutter test --exclude-tags golden` at 91 and 120
+    # minutes; this runner finishes the suite in minutes. One slot: Visual
+    # Regression timeout is 30 so it can wait if this job holds the runner.
+    runs-on: [self-hosted, macOS, ARM64, m3-ultra, realunit-app]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.41.6"
           channel: "stable"
-          cache: true
+          cache: false
       - run: flutter pub get
       - run: dart run tool/generate_localization.dart
       - run: dart run tool/generate_release_info.dart
@@ -324,16 +325,9 @@ jobs:
     name: Visual Regression
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: [self-hosted, macOS, ARM64, m3-ultra, realunit-app]
-    # 30 was sized for the era when `subosito/flutter-action@v2` still pulled
-    # the SDK through the Actions cache and burned ~18 minutes on a stalled
-    # restore plus the trailing cache-save. Without that overhead the job
-    # finishes in ~1 minute, so 15 is generous headroom — it still covers the
-    # worst normal case, where the SDK is absent from the runner's persistent
-    # tool cache and has to be downloaded from scratch. The lower ceiling is
-    # what matters here: the self-hosted runner has exactly ONE slot for this
-    # repo, so a wedged job blocks every other PR until it is killed. 15 hands
-    # the slot back twice as fast as 30.
-    timeout-minutes: 15
+    # Analyze & Test now shares this one-slot runner. The job itself still
+    # finishes in ~1 minute; 30 lets it wait if Analyze holds the slot first.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
