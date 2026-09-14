@@ -83,7 +83,12 @@ jobs:
       - name: Collect coverage for the floor surface
         run: |
           set -euo pipefail
-          cubit_tests=$(find test/screens \( -name '*cubit*_test.dart' -o -name '*bloc*_test.dart' \))
+          cubit_tests=$(find test/screens \( \
+            -name '*cubit*_test.dart' -o \
+            -name '*bloc*_test.dart' -o \
+            -name '*_state_test.dart' -o \
+            -name '*_event_test.dart' \
+          \))
           # shellcheck disable=SC2086
           flutter test --coverage --exclude-tags golden test/packages/ ${cubit_tests}
 
