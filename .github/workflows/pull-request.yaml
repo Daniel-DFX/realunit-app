@@ -51,11 +51,10 @@ jobs:
     # that isn't a draft".
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: macos-latest
-    # Full-suite `--coverage` on macos-latest ran past 180 minutes and
-    # cancelled before Coverage Floor. Pass/fail the suite uninstrumented,
-    # then collect coverage only on packages + cubit/bloc tests (the floor
-    # surface). 90 covers that split without holding a cancelled floor.
-    timeout-minutes: 90
+    # Full-suite `--coverage` on macos-latest ran past 180 minutes.
+    # Pass/fail is uninstrumented, then coverage on packages + cubit/bloc
+    # tests. Uninstrumented still ran past 90 minutes; 120 covers the split.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
