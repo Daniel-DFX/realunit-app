@@ -55,7 +55,10 @@ jobs:
     # minutes; this runner finishes the suite in minutes. One slot: Visual
     # Regression waits in the queue (job timeout starts only when it runs).
     runs-on: [self-hosted, macOS, ARM64, m3-ultra, realunit-app]
-    timeout-minutes: 30
+    # Uninstrumented suite plus floor-surface coverage plus brew lcov
+    # cancelled at 30 minutes on this runner. 60 covers that without
+    # holding the one slot as long as macos-latest did.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
