@@ -4,8 +4,8 @@ RealUnit's tests are organised into five tiers (see [#314](https://github.com/Re
 
 | Tier | What it exercises | Hardware | CI |
 |---|---|---|---|
-| 0 | Pure Dart logic — cubits, services, signers, parsers | None | ✅ `flutter test --coverage` |
-| 1 | Cubit / widget + SDK-boundary fake — sign ceremonies via `FakeBitboxCredentials`; HTTP via `MockClient` | None | ✅ `flutter test --coverage` |
+| 0 | Pure Dart logic — cubits, services, signers, parsers | None | ✅ `flutter test --exclude-tags golden` (coverage from packages + cubit/bloc/state/event specs) |
+| 1 | Cubit / widget + SDK-boundary fake — sign ceremonies via `FakeBitboxCredentials`; HTTP via `MockClient` | None | ✅ `flutter test --exclude-tags golden` |
 | 2 | Real BitBox firmware-simulator over TCP (`bitbox_flutter` TCP transport) | Docker, no device | 🟡 Deferred — Phase 2 of #314 |
 | 3 | Maestro YAML flows on an iOS Simulator (handbook capture) · real BitBox02 hardware variant deferred | iPhone simulator (handbook) · iPhone + BitBox02 Nova (hardware) | 🟢 Handbook flows automated · 🟡 hardware variant deferred — Phase 3 of #314 |
 | 4 | BLE traffic capture / replay | Capture on hardware, replay anywhere | 🟡 Stretch — Phase 4 of #314 |
