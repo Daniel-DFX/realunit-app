@@ -81,12 +81,19 @@ jobs:
         run: |
           set -euo pipefail
           cubit_dirs=$(find test -type d \( -name cubit -o -name cubits -o -name bloc \) | tr '\n' ' ')
-          # Packages plus cubit/bloc folders only. Feature parent dirs
-          # (referral, pin, dashboard, …) pull in widget tests; those
-          # hung `--coverage` past 58 minutes. Exploded file lists hung
-          # 87 minutes with no log.
+          sibling_tests=$(find test/screens \( \
+            -name '*cubit*_test.dart' -o \
+            -name '*bloc*_test.dart' -o \
+            -name '*_state_test.dart' -o \
+            -name '*_event_test.dart' \
+          \) ! -path '*/cubit/*' ! -path '*/cubits/*' ! -path '*/bloc/*' | tr '\n' ' ')
+          # Packages + cubit/bloc folders + sibling cubit specs that
+          # live next to pages. Do not pass feature parent dirs (those
+          # pull widget tests and hung `--coverage` past 58 minutes)
+          # and do not explode every cubit file (that hung 87 minutes
+          # with no log).
           # shellcheck disable=SC2086
-          flutter test --coverage --exclude-tags golden test/packages/ ${cubit_dirs}
+          flutter test --coverage --exclude-tags golden test/packages/ ${cubit_dirs} ${sibling_tests}
 
       # Narrow the coverage report to the README-defined activated surface:
       #   lib/packages/**             — services, repositories, signers, utils

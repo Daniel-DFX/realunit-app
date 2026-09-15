@@ -445,7 +445,8 @@ flutter pub run build_runner build
 flutter analyze
 flutter test --exclude-tags golden
 flutter test --coverage --exclude-tags golden test/packages/ \
-  $(find test/screens \( -name '*cubit*_test.dart' -o -name '*bloc*_test.dart' -o -name '*_state_test.dart' -o -name '*_event_test.dart' \) -exec dirname {} \; | sort -u)
+  $(find test -type d \( -name cubit -o -name cubits -o -name bloc \)) \
+  $(find test/screens \( -name '*cubit*_test.dart' -o -name '*bloc*_test.dart' -o -name '*_state_test.dart' -o -name '*_event_test.dart' \) ! -path '*/cubit/*' ! -path '*/cubits/*' ! -path '*/bloc/*')
 ```
 
 The workflow runs four CI jobs:
