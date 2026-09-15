@@ -55,10 +55,10 @@ jobs:
     # minutes; this runner finishes the suite in minutes. One slot: Visual
     # Regression waits in the queue (job timeout starts only when it runs).
     runs-on: [self-hosted, macOS, ARM64, m3-ultra, realunit-app]
-    # Uninstrumented suite plus floor-surface coverage plus brew lcov
-    # cancelled at 30 minutes on this runner. 60 covers that without
-    # holding the one slot as long as macos-latest did.
-    timeout-minutes: 60
+    # Uninstrumented suite plus floor-surface coverage cancelled at 30
+    # and 60 minutes on this runner. 90 covers that without holding the
+    # one slot as long as macos-latest did.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -121,7 +121,9 @@ jobs:
             echo "::warning::coverage/lcov.info not found — skipping coverage filter"
             exit 0
           fi
-          brew install lcov >/dev/null
+          if ! command -v lcov >/dev/null; then
+            brew install lcov >/dev/null
+          fi
           lcov --extract coverage/lcov.info \
             'lib/packages/*' \
             'lib/screens/*/cubit/*' \
