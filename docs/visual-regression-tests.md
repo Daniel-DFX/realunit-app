@@ -143,7 +143,9 @@ blocked on `golden-tests`:
 1. Switch `runs-on:` in `pull-request.yaml` for both the `build`
    (Analyze & Test) and `golden-tests` jobs — and in
    `golden-regenerate.yaml` — from `[self-hosted, ..., realunit-app]`
-   to `macos-15`.
+   to `macos-15`. Raise `build`'s `timeout-minutes` to 180 for that
+   hosted path (uninstrumented `flutter test --exclude-tags golden`
+   cancelled at 91 and 120 minutes on GitHub-hosted macOS).
 2. Dispatch the regenerate workflow on the branch to refresh all baselines
    on `macos-15`.
 3. Merge. When the self-hosted runner is back up, flip `runs-on:` back in both workflows
