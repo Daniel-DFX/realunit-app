@@ -148,8 +148,9 @@ blocked on `golden-tests`:
    cancelled at 91 and 120 minutes on GitHub-hosted macOS).
 2. Dispatch the regenerate workflow on the branch to refresh all baselines
    on `macos-15`.
-3. Merge. When the self-hosted runner is back up, flip `runs-on:` back in both workflows
-   and regenerate baselines on the self-hosted runner in a separate PR.
+3. Merge. When the self-hosted runner is back up, flip `runs-on:` back in both
+   workflows, restore `build`'s `timeout-minutes` to 30, and regenerate
+   baselines on the self-hosted runner in a separate PR.
 
 This path is intentionally manual — it's a notfall, not a routine. The
 flipping of baselines between two hosts incurs a mass-PNG-change PR each
