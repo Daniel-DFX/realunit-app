@@ -140,8 +140,9 @@ branch; rename or amend the commit message locally if a more specific
 If the self-hosted runner is down (power, macOS update, service maintenance) and a PR is
 blocked on `golden-tests`:
 
-1. Switch `runs-on:` in `pull-request.yaml` for the `golden-tests` job —
-   and in `golden-regenerate.yaml` — from `[self-hosted, ..., realunit-app]`
+1. Switch `runs-on:` in `pull-request.yaml` for both the `build`
+   (Analyze & Test) and `golden-tests` jobs — and in
+   `golden-regenerate.yaml` — from `[self-hosted, ..., realunit-app]`
    to `macos-15`.
 2. Dispatch the regenerate workflow on the branch to refresh all baselines
    on `macos-15`.

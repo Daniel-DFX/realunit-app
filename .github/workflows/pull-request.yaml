@@ -55,10 +55,10 @@ jobs:
     # minutes; this runner finishes the suite in minutes. One slot: Visual
     # Regression waits in the queue (job timeout starts only when it runs).
     runs-on: [self-hosted, macOS, ARM64, m3-ultra, realunit-app]
-    # Uninstrumented suite finishes in ~2 minutes here. Coverage on
-    # feature parent dirs pulled in widget tests and was still running
-    # at 58 minutes. Restrict coverage to packages + cubit/bloc folders.
-    timeout-minutes: 20
+    # Uninstrumented suite finishes in ~2 minutes here. Coverage is
+    # packages + cubit/bloc folders + sibling cubit specs (not feature
+    # parent dirs, not exploded file lists). 30 covers that compile+run.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
