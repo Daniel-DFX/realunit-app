@@ -87,7 +87,8 @@ class WalletConnectService {
   bool _initialized = false;
   bool _sessionLive = false;
 
-  // coverage:ignore-start — production ctor needs WalletService/AppStore; tests use forTesting
+  // Production ctor needs WalletService/AppStore; tests use forTesting.
+  // coverage:ignore-start
   WalletConnectService({
     required WalletConnectEngine engine,
     required WalletService walletService,
@@ -384,7 +385,8 @@ class WalletConnectService {
     final testSigner = _testMessageSigner;
     if (testSigner != null) return testSigner(message);
 
-    // coverage:ignore-start — live wallet unlock/sign cannot run in flutter test without a real wallet
+    // Live wallet unlock/sign cannot run in flutter test without a real wallet.
+    // coverage:ignore-start
     await _walletService!.ensureCurrentWalletUnlocked();
     try {
       return await _appStore!.wallet.currentAccount.signMessage(message);
@@ -398,7 +400,8 @@ class WalletConnectService {
     final testSigner = _testTypedDataSigner;
     if (testSigner != null) return testSigner(chainId, jsonData);
 
-    // coverage:ignore-start — live EIP-712 sign cannot run in flutter test without a real wallet
+    // Live EIP-712 sign cannot run in flutter test without a real wallet.
+    // coverage:ignore-start
     await _walletService!.ensureCurrentWalletUnlocked();
     try {
       return await Eip712Signer.signTypedDataJson(
