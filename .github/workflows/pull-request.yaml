@@ -128,9 +128,11 @@ jobs:
   coverage-collect:
     name: Coverage collect
     needs: [build, golden-tests]
-    # Same draft guard as `build`. `needs` already skips when Analyze or
-    # Visual Regression fails; this keeps the skip locally readable.
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    # Draft guard PLUS `success()`. A custom `if:` replaces the implicit
+    # skip-on-failed-needs, so without `success()` this job would still
+    # start after a red Analyze or Visual and occupy the one slot for
+    # up to 90 minutes.
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && success()
     # Same self-hosted runner as Analyze & Test / Visual Regression.
     # Waits until both finish so goldens are not queued behind
     # instrumented tests. One slot: queue wait is not job timeout.
@@ -270,10 +272,10 @@ jobs:
   coverage-floor:
     name: Coverage Floor Gate
     needs: coverage-collect
-    # Same draft guard as `build`: skip drafts, always run on push/dispatch.
-    # `coverage-collect` already enforces this, but mirroring it here keeps
-    # the gate's behaviour locally readable instead of inferred from `needs:`.
-    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    # Draft guard PLUS `success()`. A custom `if:` replaces the implicit
+    # skip-on-failed-needs; without `success()` the floor would still run
+    # (and could pass) after a failed collect.
+    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && success()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
