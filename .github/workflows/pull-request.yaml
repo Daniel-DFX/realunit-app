@@ -55,10 +55,11 @@ jobs:
     # minutes; this runner finishes the suite in minutes. One slot: Visual
     # Regression waits in the queue (job timeout starts only when it runs).
     runs-on: [self-hosted, macOS, ARM64, m3-ultra, realunit-app]
-    # Uninstrumented suite finishes in ~2 minutes here. A follow-up
-    # `--coverage` run with an exploded file list produced no log for
-    # 87 minutes. One instrumented invocation; 45 covers that.
-    timeout-minutes: 45
+    # Uninstrumented suite finishes in ~2 minutes here. Instrumented
+    # full-suite coverage cancelled at 45 minutes. Pass/fail first, then
+    # `--coverage` on package and cubit/bloc directories (not exploded
+    # files — that produced no log for 87 minutes).
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -76,7 +77,20 @@ jobs:
       # `test/goldens/` and are validated in the parallel `golden-tests`
       # job (see `docs/visual-regression-tests.md`). Running them here
       # too would duplicate that work.
-      - run: flutter test --coverage --exclude-tags golden
+      - run: flutter test --exclude-tags golden
+      - name: Collect coverage for the floor surface
+        run: |
+          set -euo pipefail
+          dirs=$(find test/screens \( \
+            -name '*cubit*_test.dart' -o \
+            -name '*bloc*_test.dart' -o \
+            -name '*_state_test.dart' -o \
+            -name '*_event_test.dart' \
+          \) -exec dirname {} \; | sort -u | tr '\n' ' ')
+          # Directories, not exploded files: listing every spec hung
+          # `flutter test --coverage` with no log for 87 minutes.
+          # shellcheck disable=SC2086
+          flutter test --coverage --exclude-tags golden test/packages/ ${dirs}
 
       # Narrow the coverage report to the README-defined activated surface:
       #   lib/packages/**             — services, repositories, signers, utils
