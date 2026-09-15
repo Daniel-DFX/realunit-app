@@ -272,13 +272,20 @@ jobs:
   coverage-floor:
     name: Coverage Floor Gate
     needs: coverage-collect
-    # Draft guard PLUS `success()`. A custom `if:` replaces the implicit
-    # skip-on-failed-needs; without `success()` the floor would still run
-    # (and could pass) after a failed collect.
-    if: (github.event_name != 'pull_request' || github.event.pull_request.draft == false) && success()
+    # `always()` so a failed/cancelled collect does not skip this
+    # required check (skipped counts as passing). `success()` stays on
+    # `coverage-collect` so a red Analyze/Visual does not occupy the
+    # one self-hosted slot. Drafts still skip.
+    if: always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - name: Require a successful collect
+        if: needs.coverage-collect.result != 'success'
+        run: |
+          echo "::error::Coverage collect did not succeed (result=${{ needs.coverage-collect.result }}) — floor stays red instead of skipped"
+          exit 1
+
       - uses: actions/checkout@v6
 
       - name: Download coverage summary
