@@ -1,5 +1,6 @@
-import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
+
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:realunit_wallet/generated/i18n.dart';
 import 'package:realunit_wallet/screens/kyc/steps/registration/cubits/registration_step/kyc_registration_step_cubit.dart';
