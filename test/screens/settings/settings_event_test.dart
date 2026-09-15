@@ -70,6 +70,17 @@ void main() {
     });
   });
 
+  group('ClearAccountCurrencyEvent', () {
+    test('all instances are equal (singleton-style event, no payload)', () {
+      const a = ClearAccountCurrencyEvent();
+      const b = ClearAccountCurrencyEvent();
+
+      expect(a, equals(b));
+      expect(a.hashCode, b.hashCode);
+      expect(a.props, isEmpty);
+    });
+  });
+
   group('ToggleHideAmountEvent', () {
     test('all instances are equal (singleton-style event, no payload)', () {
       const a = ToggleHideAmountEvent();

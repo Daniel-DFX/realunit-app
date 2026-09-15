@@ -716,6 +716,21 @@ void main() {
     );
   });
 
+  test('request prompt exposes the attested origin', () {
+    const prompt = WalletConnectRequestPrompt(
+      request: WalletConnectSessionRequest(
+        requestId: 1,
+        topic: 'topic',
+        method: 'personal_sign',
+        params: ['hello', '0xabc'],
+        originUrl: 'https://app.frankencoin.com',
+        verifyStatus: WalletConnectVerifyStatus.valid,
+      ),
+      messagePreview: 'hello',
+    );
+    expect(prompt.originUrl, 'https://app.frankencoin.com');
+  });
+
   test('proposal prompt exposes the attested origin', () async {
     engine.emit(
       const WalletConnectSessionProposal(
@@ -925,5 +940,39 @@ void main() {
     );
     expect(typedEngine.approvedRequests, isEmpty);
     expect(typedEngine.rejectedRequests, contains(38));
+  });
+
+  test('device-cancel during typed data rejects the request', () async {
+    final typedEngine = _FakeEngine();
+    final typedService = WalletConnectService.forTesting(
+      engine: typedEngine,
+      address: address,
+      signMessage: (message) async => 'sig:$message',
+      signTypedData: (_, _) async => throw const SigningCancelledException(),
+    );
+    final typedPrompts = <WalletConnectUserPrompt>[];
+    typedService.prompts.listen(typedPrompts.add);
+    await typedService.ensureInitialized();
+
+    typedEngine.emit(
+      const WalletConnectSessionRequest(
+        requestId: 39,
+        topic: 'topic',
+        method: 'eth_signTypedData_v4',
+        params: [
+          address,
+          '{"domain":{}}',
+        ],
+        originUrl: 'https://app.frankencoin.com',
+        verifyStatus: WalletConnectVerifyStatus.valid,
+        chainId: 1,
+      ),
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    await expectLater(
+      typedService.approvePrompt(typedPrompts.first),
+      throwsA(isA<SigningCancelledException>()),
+    );
+    expect(typedEngine.rejectedRequests, contains(39));
   });
 }

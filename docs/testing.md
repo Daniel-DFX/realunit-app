@@ -446,7 +446,8 @@ flutter analyze
 flutter test --exclude-tags golden
 flutter test --coverage --reporter expanded --exclude-tags golden test/packages/ \
   $(find test -type d \( -name cubit -o -name cubits -o -name bloc \)) \
-  $(find test/screens \( -name '*cubit*_test.dart' -o -name '*bloc*_test.dart' -o -name '*_state_test.dart' -o -name '*_event_test.dart' \) ! -path '*/cubit/*' ! -path '*/cubits/*' ! -path '*/bloc/*')
+  $(find test/screens \( -name '*cubit*_test.dart' -o -name '*bloc*_test.dart' -o -name '*_state_test.dart' -o -name '*_event_test.dart' \) ! -path '*/cubit/*' ! -path '*/cubits/*' ! -path '*/bloc/*') \
+  $(find test -name '*_states_test.dart')
 ```
 
 The workflow runs five CI jobs:
