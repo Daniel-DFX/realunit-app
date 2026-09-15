@@ -140,16 +140,17 @@ branch; rename or amend the commit message locally if a more specific
 If the self-hosted runner is down (power, macOS update, service maintenance) and a PR is
 blocked on `golden-tests`:
 
-1. Switch `runs-on:` in `pull-request.yaml` for both the `build`
-   (Analyze & Test) and `golden-tests` jobs — and in
+1. Switch `runs-on:` in `pull-request.yaml` for the `build`
+   (Analyze & Test), `golden-tests`, and `coverage-collect` jobs — and in
    `golden-regenerate.yaml` — from `[self-hosted, ..., realunit-app]`
    to `macos-15`. Raise `build`'s `timeout-minutes` to 180 for that
    hosted path (uninstrumented `flutter test --exclude-tags golden`
-   cancelled at 91 and 120 minutes on GitHub-hosted macOS).
+   cancelled at 91 and 120 minutes on GitHub-hosted macOS). Leave
+   `coverage-collect` at 90 unless the hosted collect also cancels.
 2. Dispatch the regenerate workflow on the branch to refresh all baselines
    on `macos-15`.
 3. Merge. When the self-hosted runner is back up, flip `runs-on:` back in both
-   workflows, restore `build`'s `timeout-minutes` to 30, and regenerate
+   workflows, restore `build`'s `timeout-minutes` to 15, and regenerate
    baselines on the self-hosted runner in a separate PR.
 
 This path is intentionally manual — it's a notfall, not a routine. The
