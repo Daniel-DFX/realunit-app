@@ -500,12 +500,12 @@ class WalletConnectService {
           int.parse(hex.substring(i, i + 2), radix: 16),
       ];
       return utf8.decode(bytes, allowMalformed: true);
-    } on FormatException {
       // utf8.decode(allowMalformed: true) does not throw for tested inputs.
       // coverage:ignore-start
+    } on FormatException {
       return value;
-      // coverage:ignore-end
     }
+    // coverage:ignore-end
   }
 
   String? _typedDataJson(dynamic params) {
