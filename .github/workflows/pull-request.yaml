@@ -55,10 +55,10 @@ jobs:
     # minutes; this runner finishes the suite in minutes. One slot: Visual
     # Regression waits in the queue (job timeout starts only when it runs).
     runs-on: [self-hosted, macOS, ARM64, m3-ultra, realunit-app]
-    # Uninstrumented suite finishes in ~2 minutes here. Directory
-    # `--coverage` was still running at 28 minutes when the 30-minute
-    # job timeout cancelled it. 60 covers that compile+run.
-    timeout-minutes: 60
+    # Uninstrumented suite finishes in ~2 minutes here. Coverage on
+    # feature parent dirs pulled in widget tests and was still running
+    # at 58 minutes. Restrict coverage to packages + cubit/bloc folders.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -80,16 +80,13 @@ jobs:
       - name: Collect coverage for the floor surface
         run: |
           set -euo pipefail
-          dirs=$(find test/screens \( \
-            -name '*cubit*_test.dart' -o \
-            -name '*bloc*_test.dart' -o \
-            -name '*_state_test.dart' -o \
-            -name '*_event_test.dart' \
-          \) -exec dirname {} \; | sort -u | tr '\n' ' ')
-          # Directories, not exploded files: listing every spec hung
-          # `flutter test --coverage` with no log for 87 minutes.
+          cubit_dirs=$(find test -type d \( -name cubit -o -name cubits -o -name bloc \) | tr '\n' ' ')
+          # Packages plus cubit/bloc folders only. Feature parent dirs
+          # (referral, pin, dashboard, …) pull in widget tests; those
+          # hung `--coverage` past 58 minutes. Exploded file lists hung
+          # 87 minutes with no log.
           # shellcheck disable=SC2086
-          flutter test --coverage --exclude-tags golden test/packages/ ${dirs}
+          flutter test --coverage --exclude-tags golden test/packages/ ${cubit_dirs}
 
       # Narrow the coverage report to the README-defined activated surface:
       #   lib/packages/**             — services, repositories, signers, utils
