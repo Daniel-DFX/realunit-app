@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:realunit_wallet/generated/i18n.dart';
 import 'package:realunit_wallet/screens/kyc/steps/registration/cubits/registration_step/kyc_registration_step_cubit.dart';
+
+import '../../../../helper/pump_app.dart';
 
 void main() {
   group('$KycRegistrationStepCubit initial state', () {
@@ -101,22 +102,18 @@ void main() {
         KycRegistrationStep.taxResidence,
       ];
       late final Map<KycRegistrationStep, String> titles;
-      await tester.pumpWidget(
-        MaterialApp(
-          localizationsDelegates: S.localizationsDelegates,
-          supportedLocales: S.supportedLocales,
-          home: Builder(
-            builder: (context) {
-              titles = {
-                for (final step in steps)
-                  step: KycRegistrationStepState(
-                    steps: steps,
-                    step: step,
-                  ).title(context),
-              };
-              return const SizedBox.shrink();
-            },
-          ),
+      await tester.pumpApp(
+        Builder(
+          builder: (context) {
+            titles = {
+              for (final step in steps)
+                step: KycRegistrationStepState(
+                  steps: steps,
+                  step: step,
+                ).title(context),
+            };
+            return const SizedBox.shrink();
+          },
         ),
       );
       expect(titles[KycRegistrationStep.referral], isNotEmpty);
