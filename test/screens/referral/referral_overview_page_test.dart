@@ -612,7 +612,7 @@ void main() {
     );
   });
 
-  testWidgets('copy fallback names the Empfehler from inviterName', (
+  testWidgets('copy fallback uses the first-person share sentence', (
     tester,
   ) async {
     String? copied;

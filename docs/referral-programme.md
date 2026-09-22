@@ -138,8 +138,9 @@ accepts given-name autofill.
 ### `GET /v1/realunit/referral/invites`
 
 List of the current user's invites (bare array or `{ "invites": [...] }`).
-Each row includes `copyText` / `copyTextEn` / `inviterName` so copy/share
-on overview can name the Empfehler when the server omits share text.
+Each row includes `copyText` / `copyTextEn` / `inviterName`. When the
+server omits share text, overview copy/share uses the first-person
+fallback (guest name plus invite URL), not a host-named sentence.
 The Empfehler list is **Open** or **Credited** only. Bound and Review
 are folded to Open server-side so the Empfehler cannot see the invitee’s
 registration or purchase progress (TB Ziff. 7). Admin relationships keep
