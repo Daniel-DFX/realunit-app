@@ -74,16 +74,21 @@ typedef NonFatalReporter = void Function(Object error);
 /// Gated on the same [crashReportingDsn] that decides whether [initCrashReporting]
 /// starts the SDK at all: without an injected DSN — every local and test build —
 /// nothing was ever started, and the report is a pure log line.
+///
+/// @no-integration-test: the capture branch only runs in a build that injects a
+/// DSN, which no test build does; the DSN gate and the never-throws contract
+/// are covered by unit tests.
 void reportNonFatal(Object error) {
-  developer.log('non-fatal: $error', name: 'WalletApp', error: error);
-  if (crashReportingDsn.isEmpty) return;
   try {
+    developer.log('non-fatal: $error', name: 'WalletApp', error: error);
+    if (crashReportingDsn.isEmpty) return;
     Sentry.captureException(error).ignore();
   } catch (_) {
     // A caller-visible throw here must never happen, since this runs before
     // a required emit in KycCubit. `.ignore()` discards both the eventual
     // value and any asynchronous error; the try/catch covers a synchronous
-    // throw from the call itself.
+    // throw from the log line, the error's own `toString()` or the capture
+    // call itself.
   }
 }
 

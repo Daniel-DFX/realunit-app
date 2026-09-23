@@ -63,5 +63,14 @@ void main() {
       expect(crashReportingDsn, isEmpty);
       expect(() => reportNonFatal(StateError('nothing is listening')), returnsNormally);
     });
+
+    test('does not throw when the reported error cannot render itself', () {
+      expect(() => reportNonFatal(_UnprintableError()), returnsNormally);
+    });
   });
+}
+
+class _UnprintableError implements Exception {
+  @override
+  String toString() => throw StateError('toString failed');
 }
