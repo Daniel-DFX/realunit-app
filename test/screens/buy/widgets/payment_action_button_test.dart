@@ -225,6 +225,42 @@ void main() {
     );
   });
 
+  group('$PaymentActionButton registration and KYC gates', () {
+    for (final error in [PaymentInfoError.registrationRequired, PaymentInfoError.kycRequired]) {
+      testWidgets(
+        '${error.name}: tap delivers the API context to the KYC route URL',
+        (tester) async {
+          when(() => paymentInfoCubit.state).thenReturn(
+            BuyPaymentInfoFailure(error, context: 'RealunitBuy'),
+          );
+
+          await pumpButton(tester);
+
+          await tester.tap(find.text(S.current.next));
+          await tester.pumpAndSettle();
+
+          expect(pushedRoutes, [AppRoutes.kyc]);
+          expect(kycContext, 'RealunitBuy');
+        },
+      );
+
+      testWidgets(
+        '${error.name}: tap enters the KYC route unscoped when the API attached no context',
+        (tester) async {
+          when(() => paymentInfoCubit.state).thenReturn(BuyPaymentInfoFailure(error));
+
+          await pumpButton(tester);
+
+          await tester.tap(find.text(S.current.next));
+          await tester.pumpAndSettle();
+
+          expect(pushedRoutes, [AppRoutes.kyc]);
+          expect(kycContext, isNull);
+        },
+      );
+    }
+  });
+
   group('$PaymentActionButton maxAmountExceeded gate', () {
     testWidgets(
       'renders disabled Next, the max-amount label, not confirm or retry',

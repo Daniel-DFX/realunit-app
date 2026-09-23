@@ -993,6 +993,10 @@ void main() {
         const KycLoading(),
         const KycUnsupportedStepFailure(KycStepName.additionalDocuments),
       ],
+      verify: (_) => expect(
+        reported.map((e) => (e as KycUnsupportedStepException).stepName),
+        [KycStepName.additionalDocuments],
+      ),
     );
 
     // Registration normally satisfies PersonalData without the user seeing it. It re-opens when
@@ -1130,6 +1134,10 @@ void main() {
         const KycLoading(),
         const KycUnsupportedStepFailure(null),
       ],
+      verify: (_) => expect(
+        reported.map((e) => (e as KycUnsupportedStepException).stepName),
+        [null],
+      ),
     );
 
     blocTest<KycCubit, KycState>(
