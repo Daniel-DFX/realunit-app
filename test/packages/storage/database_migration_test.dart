@@ -364,6 +364,19 @@ void main() {
       },
     );
 
+    test('v1 whose earlier upgrade already created the old details table reaches v5 with the amount columns', () async {
+      // An upgrade from v1 under the v2–v4 code created dfx_transaction_details
+      // without the amount columns and was interrupted before the version was
+      // written.
+      final upgraded = _openSchema(1, [_txRow('tx-token', type: 2, withCategory: false)]);
+      addTearDown(upgraded.close);
+
+      expect(await _userVersion(upgraded), 5);
+      expect(await _types(upgraded), {'tx-token': 2});
+      expect(await _columns(upgraded, 'transactions'), contains('category'));
+      expect(await _columns(upgraded, 'dfx_transaction_details'), containsAll(_amountColumns));
+    });
+
     test('v2 → v5 adds the category column with its default and the amount columns', () async {
       final upgraded = _openSchema(2, [
         _txRow('tx-token', type: 2, withCategory: false),
@@ -444,7 +457,8 @@ const _walletRow =
 
 /// Tables of schema v2: `transactions` has no `category` and
 /// `dfx_transaction_details` none of the amount columns. v3 adds `category`;
-/// v4 changes data only, so it shares the v3 tables.
+/// v4 changes data only, so it shares the v3 tables. Version 1 gets the v2
+/// tables too, as an interrupted v1 upgrade under the v2–v4 code left them.
 List<String> _schema(int version) => [
   'CREATE TABLE "assets" ("id" INTEGER NOT NULL UNIQUE, "chain_id" INTEGER NOT NULL, "address" TEXT NOT NULL, '
       '"symbol" TEXT NOT NULL, "name" TEXT NOT NULL, "decimals" INTEGER NOT NULL, "icon_url" TEXT NULL, '

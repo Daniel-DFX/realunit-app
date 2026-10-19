@@ -101,7 +101,7 @@ class AppDatabase extends _$AppDatabase {
           'UPDATE transactions SET type = 3 WHERE type = 5',
         );
       }
-      if (from >= 2 && from < 5 && to >= 5) {
+      if (from < 5 && to >= 5) {
         for (final column in [
           dfxTransactionDetails.inputAmount,
           dfxTransactionDetails.inputAsset,
