@@ -364,18 +364,21 @@ void main() {
       },
     );
 
-    test('v1 whose earlier upgrade already created the old details table reaches v5 with the amount columns', () async {
-      // An upgrade from v1 under the v2–v4 code created dfx_transaction_details
-      // without the amount columns and was interrupted before the version was
-      // written.
-      final upgraded = _openSchema(1, [_txRow('tx-token', type: 2, withCategory: false)]);
-      addTearDown(upgraded.close);
+    test(
+      'v1 whose earlier upgrade already created the old details table reaches v5 with the amount columns',
+      () async {
+        // An upgrade from v1 under the v2–v4 code created dfx_transaction_details
+        // without the amount columns and was interrupted before the version was
+        // written.
+        final upgraded = _openSchema(1, [_txRow('tx-token', type: 2, withCategory: false)]);
+        addTearDown(upgraded.close);
 
-      expect(await _userVersion(upgraded), 5);
-      expect(await _types(upgraded), {'tx-token': 2});
-      expect(await _columns(upgraded, 'transactions'), contains('category'));
-      expect(await _columns(upgraded, 'dfx_transaction_details'), containsAll(_amountColumns));
-    });
+        expect(await _userVersion(upgraded), 5);
+        expect(await _types(upgraded), {'tx-token': 2});
+        expect(await _columns(upgraded, 'transactions'), contains('category'));
+        expect(await _columns(upgraded, 'dfx_transaction_details'), containsAll(_amountColumns));
+      },
+    );
 
     test('v2 → v5 adds the category column with its default and the amount columns', () async {
       final upgraded = _openSchema(2, [
