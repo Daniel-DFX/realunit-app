@@ -127,6 +127,7 @@
   "kycFailureDescription": "Es ist ein Fehler beim Laden aufgekommen: ${message}. Bitte versuchen Sie es zu einem späteren Zeitpunkt. Falls der Fehler weiterhin besteht, kontaktieren Sie unseren Support.",
   "kycLinkWalletDescription": "Sie sind als Aktionär eingetragen. Bestätigen Sie diese Wallet, um sie Ihrem Konto hinzuzufügen.",
   "kycLinkWalletSubmit": "Wallet hinzufügen",
+  "kycLinkWalletSwissTaxResidence": "Steuerwohnsitz Schweiz",
   "kycLinkWalletTitle": "Wallet hinzufügen",
   "kycManualReviewDescription": "Ihre RealUnit-Registrierung wird von unserem Team manuell geprüft, bevor sie abgeschlossen werden kann. Sie müssen nichts weiter tun — wir kümmern uns darum. Ihr Status wird automatisch aktualisiert, sobald die Prüfung abgeschlossen ist.",
   "kycManualReviewRejectionLabel": "Begründung der Ablehnung",
@@ -175,6 +176,7 @@
   "networkTestnet": "Testnet",
   "newWalletSubtitle": "Ich möchte eine neue Wallet erstellen.",
   "next": "Weiter",
+  "no": "Nein",
   "number": "Nummer",
   "onboardingCompletedSubtitle": "Gratulation, Sie haben erfolgreich eine Wallet eröffnet. Sichern Sie im nächsten Schritt den Zugriff auf diese Mobile-App.",
   "onboardingCompletedTitle": "Ihre Wallet ist bereit",
@@ -575,6 +577,7 @@
   "website": "Website",
   "without": "Ohne",
   "year": "Jahr",
+  "yes": "Ja",
   "youPay": "Sie bezahlen",
   "youReceive": "Sie erhalten",
   "youSell": "Sie verkaufen"
