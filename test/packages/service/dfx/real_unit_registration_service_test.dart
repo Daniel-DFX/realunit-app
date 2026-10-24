@@ -381,9 +381,13 @@ void main() {
     group('registration date', () {
       late FakeBitboxCredentials creds;
       late List<String> paths;
+      late List<String> walletBodies;
 
       http.Client clientReturningDate(String date) => MockClient((request) async {
         paths.add(request.url.path);
+        if (request.url.path == '/v1/realunit/register/wallet') {
+          walletBodies.add(request.body);
+        }
         if (request.url.path == '/v1/realunit/register/date') {
           return http.Response(jsonEncode({'date': date}), 200);
         }
@@ -393,6 +397,7 @@ void main() {
       setUp(() {
         creds = FakeBitboxCredentials(signDelay: Duration.zero);
         paths = [];
+        walletBodies = [];
         when(() => account.primaryAddress).thenReturn(creds);
       });
 
@@ -400,7 +405,9 @@ void main() {
         await build(clientReturningDate('2026-07-13')).registerWallet(buildUserData());
 
         expect(creds.signCallCount, 1);
-        expect(paths, contains('/v1/realunit/register/wallet'));
+        expect(paths, contains('/v1/realunit/register/date'));
+        expect(walletBodies, hasLength(1));
+        expect(jsonDecode(walletBodies.single)['registrationDate'], '2026-07-13');
       });
 
       for (final date in const [

@@ -23,6 +23,7 @@ import 'package:realunit_wallet/screens/home/bloc/home_bloc.dart';
 import 'package:realunit_wallet/screens/kyc/cubits/kyc/kyc_cubit.dart';
 import 'package:realunit_wallet/screens/kyc/steps/link_wallet/cubits/kyc_link_wallet_cubit.dart';
 import 'package:realunit_wallet/screens/kyc/steps/link_wallet/kyc_link_wallet_page.dart';
+import 'package:web3dart/web3dart.dart';
 
 import '../../../../helper/helper.dart';
 
@@ -367,6 +368,7 @@ void main() {
       'city': ['Zurich'],
       'country': [RegExp(r'\bCH\b'), 'Switzerland'],
       'Swiss tax residence': [RegExp(r'^Yes$')],
+      'wallet address': [EthereumAddress.fromHex(_debugAddress).hexEip55],
       'account type': [
         'HUMAN',
         RegExp('individual person|natural person', caseSensitive: false),
