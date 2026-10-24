@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:realunit_wallet/packages/service/dfx/delegation_caveat_check.dart';
 import 'package:realunit_wallet/packages/service/dfx/exceptions/api_exception.dart';
 import 'package:realunit_wallet/packages/service/dfx/exceptions/bitbox_address_unavailable_exception.dart';
 import 'package:realunit_wallet/packages/service/dfx/exceptions/bitbox_exception.dart';
@@ -7,6 +8,7 @@ import 'package:realunit_wallet/packages/service/dfx/exceptions/payment/buy_exce
 import 'package:realunit_wallet/packages/service/dfx/exceptions/payment/pay_exceptions.dart';
 import 'package:realunit_wallet/packages/service/dfx/exceptions/payment/sell_exceptions.dart';
 import 'package:realunit_wallet/packages/service/dfx/exceptions/payment/transfer_exceptions.dart';
+import 'package:realunit_wallet/packages/service/dfx/exceptions/registration_date_unavailable_exception.dart';
 import 'package:realunit_wallet/packages/service/dfx/exceptions/registration_rejected_exception.dart';
 import 'package:realunit_wallet/packages/service/dfx/models/kyc/kyc_level.dart';
 import 'package:realunit_wallet/packages/service/dfx/sell_quote_amount.dart';
@@ -31,6 +33,7 @@ void main() {
       const ApiException(code: 'TEST', message: 'test'),
       const UpgradeRequiredException(minSupportedVersion: '1.3.0'),
       const RegistrationRejectedException(code: 'TEST', message: 'test'),
+      const RegistrationDateUnavailableException(message: 'test'),
       const RegistrationRequiredException(code: 'TEST', message: 'test'),
       const KycLevelRequiredException(
         code: 'TEST',
@@ -42,6 +45,7 @@ void main() {
       const AlreadyConfirmedException(code: 'TEST', message: 'test'),
       const SellShareCountMismatchException(),
       const SellUnsignedTxMismatchException('test'),
+      const DelegationEnvelopeMismatchException('test'),
       const InvalidPaymentLinkException('test'),
       const PayConfirmNotSubmittedException('test'),
       const PaySignatureUnsupportedException(),

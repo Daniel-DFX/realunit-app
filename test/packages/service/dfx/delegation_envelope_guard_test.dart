@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:eip7702/eip7702.dart' as eip7702;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -20,6 +21,7 @@ import 'package:realunit_wallet/packages/service/dfx/real_unit_sell_payment_info
 import 'package:realunit_wallet/packages/service/dfx/real_unit_transfer_service.dart';
 import 'package:realunit_wallet/packages/service/session_cache.dart';
 import 'package:realunit_wallet/packages/service/wallet_service.dart';
+import 'package:realunit_wallet/packages/wallet/delegation_signer.dart';
 import 'package:realunit_wallet/packages/wallet/wallet.dart';
 import 'package:realunit_wallet/packages/wallet/wallet_account.dart';
 import 'package:realunit_wallet/styles/currency.dart';
@@ -34,6 +36,30 @@ class _MockAccount extends Mock implements AWalletAccount {}
 class _MockCacheRepository extends Mock implements CacheRepository {}
 
 class _MockWalletService extends Mock implements WalletService {}
+
+/// Signs like the production signer and counts each signature.
+class _SpySigner extends DelegationSigner {
+  int delegationCalls = 0;
+  int authorizationCalls = 0;
+
+  @override
+  Future<String> signDelegation({
+    required CredentialsWithKnownAddress credentials,
+    required Eip7702Data eip7702Data,
+  }) {
+    delegationCalls++;
+    return super.signDelegation(credentials: credentials, eip7702Data: eip7702Data);
+  }
+
+  @override
+  eip7702.EIP7702MsgSignature signAuthorization({
+    required CredentialsWithKnownAddress credentials,
+    required Eip7702Data eip7702Data,
+  }) {
+    authorizationCalls++;
+    return super.signAuthorization(credentials: credentials, eip7702Data: eip7702Data);
+  }
+}
 
 const _testPrivateKeyHex = 'fb1ace12f9801e85f3db1b3935dd47d9f064f98152466f47c701b5e12680e612';
 final _privKey = EthPrivateKey.fromHex(_testPrivateKeyHex);
@@ -121,8 +147,9 @@ Map<String, dynamic> _delegationJson({
 
 typedef _Mutation = void Function(Map<String, dynamic> json);
 
-void _setAuthority(Map<String, dynamic> json) => (json['message'] as Map<String, dynamic>)['authority'] =
-    '0x0000000000000000000000000000000000000000000000000000000000000001';
+void _setAuthority(Map<String, dynamic> json) =>
+    (json['message'] as Map<String, dynamic>)['authority'] =
+        '0x0000000000000000000000000000000000000000000000000000000000000001';
 
 void _setDomainName(Map<String, dynamic> json) =>
     (json['domain'] as Map<String, dynamic>)['name'] = 'OtherManager';
@@ -134,8 +161,10 @@ void main() {
   late _MockAppStore appStore;
   late _MockWalletService walletService;
   late List<http.Request> requests;
+  late _SpySigner signer;
 
   setUp(() {
+    signer = _SpySigner();
     appStore = _MockAppStore();
     walletService = _MockWalletService();
     final wallet = _MockWallet();
@@ -170,6 +199,8 @@ void main() {
         await confirm(null);
 
         expect(requests, hasLength(1));
+        expect(signer.delegationCalls, 1);
+        expect(signer.authorizationCalls, 1);
       });
 
       Future<void> expectRefused(_Mutation mutate) async {
@@ -179,7 +210,9 @@ void main() {
         } catch (e) {
           error = e;
         }
-        expect(requests, isEmpty, reason: 'expected no confirm request (nothing signed)');
+        expect(signer.delegationCalls, 0, reason: 'expected no delegation signature');
+        expect(signer.authorizationCalls, 0, reason: 'expected no authorization signature');
+        expect(requests, isEmpty, reason: 'expected no confirm request');
         expect(error, isA<Exception>(), reason: 'expected the confirm to throw');
       }
 
@@ -200,7 +233,7 @@ void main() {
   delegationGuardCases('sell', (mutate) {
     final json = _delegationJson(caveats: _sellCaveats('sellWrapperAmount100'), amountWei: '100');
     mutate?.call(json);
-    return RealUnitSellPaymentInfoService(appStore, walletService).confirmPayment(
+    return RealUnitSellPaymentInfoService(appStore, walletService, signer: signer).confirmPayment(
       SellPaymentInfo(
         id: 42,
         eip7702: Eip7702Data.fromJson(json),
@@ -222,7 +255,7 @@ void main() {
   delegationGuardCases('pay', (mutate) {
     final json = _delegationJson(caveats: _sellCaveats('sellWrapperAmount2'), amountWei: '2');
     mutate?.call(json);
-    return RealUnitPayService(appStore, walletService).confirmOcpPay(
+    return RealUnitPayService(appStore, walletService, signer: signer).confirmOcpPay(
       swap: SwapPaymentInfo(
         id: 99,
         amount: 2,
@@ -242,7 +275,7 @@ void main() {
     final json = _delegationJson(caveats: _transferCaveats(), amountWei: '$_transferAmount')
       ..['recipient'] = _transferRecipient;
     mutate?.call(json);
-    return RealUnitTransferService(appStore, walletService).confirmTransfer(
+    return RealUnitTransferService(appStore, walletService, signer: signer).confirmTransfer(
       RealUnitTransferPaymentInfoDto.fromJson({
         'id': 42,
         'uid': 'RTabc',

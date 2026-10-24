@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:realunit_wallet/packages/config/api_config.dart';
 import 'package:realunit_wallet/packages/service/dfx/dfx_auth_service.dart';
 import 'package:realunit_wallet/packages/service/dfx/exceptions/api_exception.dart';
+import 'package:realunit_wallet/packages/service/dfx/exceptions/registration_date_unavailable_exception.dart';
 import 'package:realunit_wallet/packages/service/dfx/exceptions/registration_rejected_exception.dart';
 import 'package:realunit_wallet/packages/service/dfx/models/registration/dto/real_unit_registration_email_request_dto.dart';
 import 'package:realunit_wallet/packages/service/dfx/models/registration/dto/real_unit_registration_email_response_dto.dart';
@@ -69,16 +70,14 @@ class RealUnitRegistrationService extends DFXAuthService {
 
     final date = (jsonDecode(response.body) as Map<String, dynamic>)['date'];
     if (date is! String) {
-      throw ApiException(
+      throw RegistrationDateUnavailableException(
         statusCode: response.statusCode,
-        code: 'UNKNOWN',
         message: 'Missing registration date in API response',
       );
     }
     if (!_isCalendarDate(date)) {
-      throw ApiException(
+      throw RegistrationDateUnavailableException(
         statusCode: response.statusCode,
-        code: 'UNKNOWN',
         message: 'Invalid registration date in API response',
       );
     }

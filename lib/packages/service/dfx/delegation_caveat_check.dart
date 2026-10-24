@@ -116,6 +116,17 @@ const delegationDomainVersion = '1';
 /// delegation directly, not through a parent delegation.
 const rootDelegationAuthority = '0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
+/// A delegation outside the DelegationManager EIP-712 domain or one that is
+/// not a root delegation. Thrown before anything is signed.
+class DelegationEnvelopeMismatchException implements Exception {
+  final String reason;
+
+  const DelegationEnvelopeMismatchException(this.reason);
+
+  @override
+  String toString() => 'DelegationEnvelopeMismatchException: $reason';
+}
+
 /// Rejects a delegation outside the DelegationManager EIP-712 domain or one
 /// that is not a root delegation. Hex case does not matter.
 void checkDelegationEnvelope({
@@ -124,13 +135,19 @@ void checkDelegationEnvelope({
   required String authority,
 }) {
   if (domainName != delegationDomainName) {
-    throw Exception('EIP-7702 domain name is not $delegationDomainName');
+    throw const DelegationEnvelopeMismatchException(
+      'EIP-7702 domain name is not $delegationDomainName',
+    );
   }
   if (domainVersion != delegationDomainVersion) {
-    throw Exception('EIP-7702 domain version is not $delegationDomainVersion');
+    throw const DelegationEnvelopeMismatchException(
+      'EIP-7702 domain version is not $delegationDomainVersion',
+    );
   }
   if (authority.toLowerCase() != rootDelegationAuthority) {
-    throw Exception('EIP-7702 authority is not the root authority');
+    throw const DelegationEnvelopeMismatchException(
+      'EIP-7702 authority is not the root authority',
+    );
   }
 }
 

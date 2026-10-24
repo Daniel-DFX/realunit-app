@@ -12,6 +12,7 @@ import 'package:realunit_wallet/generated/i18n.dart';
 import 'package:realunit_wallet/packages/hardware_wallet/bitbox.dart';
 import 'package:realunit_wallet/packages/service/app_store.dart';
 import 'package:realunit_wallet/packages/service/dfx/dfx_kyc_service.dart';
+import 'package:realunit_wallet/packages/service/dfx/exceptions/registration_date_unavailable_exception.dart';
 import 'package:realunit_wallet/packages/service/dfx/models/registration/kyc/kyc_personal_data.dart';
 import 'package:realunit_wallet/packages/service/dfx/models/user/dto/real_unit_user_data_dto.dart';
 import 'package:realunit_wallet/packages/service/dfx/real_unit_registration_service.dart';
@@ -184,6 +185,32 @@ void main() {
       await tester.pump();
 
       expect(find.byType(SnackBar), findsOne);
+    });
+
+    testWidgets('an unavailable registration date shows the localized message', (tester) async {
+      whenListen(
+        linkCubit,
+        Stream.fromIterable([
+          const KycLinkWalletFailure(
+            'Invalid registration date in API response',
+            cause: RegistrationDateUnavailableException(
+              message: 'Invalid registration date in API response',
+            ),
+          ),
+        ]),
+        initialState: const KycLinkWalletReady(_userData),
+      );
+
+      await tester.pumpApp(buildSubject());
+      await tester.pump();
+
+      expect(
+        find.text(
+          'The registration date could not be loaded. Nothing was signed. Please try again.',
+        ),
+        findsOne,
+      );
+      expect(find.textContaining('API response'), findsNothing);
     });
   });
 
