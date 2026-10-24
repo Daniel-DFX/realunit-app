@@ -113,7 +113,13 @@ void main() {
           deposit: _deposit(BigInt.zero),
           quote: _quote(zchfAmount: 1e-19, requiredGasEth: 0.001),
         ),
-        throwsA(isA<SellUnsignedTxMismatchException>()),
+        throwsA(
+          isA<SellUnsignedTxMismatchException>().having(
+            (e) => e.reason,
+            'reason',
+            'quote has no exact ZCHF amount',
+          ),
+        ),
       );
     });
 
@@ -124,7 +130,13 @@ void main() {
           deposit: _deposit(BigInt.zero),
           quote: _quote(zchfAmount: -1, requiredGasEth: 0.001),
         ),
-        throwsA(isA<SellUnsignedTxMismatchException>()),
+        throwsA(
+          isA<SellUnsignedTxMismatchException>().having(
+            (e) => e.reason,
+            'reason',
+            'quote has no exact ZCHF amount',
+          ),
+        ),
       );
     });
 
