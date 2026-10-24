@@ -403,7 +403,13 @@ void main() {
         expect(paths, contains('/v1/realunit/register/wallet'));
       });
 
-      for (final date in const ['2026/07/13', '13.07.2026', '2026-7-13', '2026-07-13T00:00:00Z']) {
+      for (final date in const [
+        '2026/07/13',
+        '13.07.2026',
+        '2026-7-13',
+        '2026-07-13T00:00:00Z',
+        '2026-02-30',
+      ]) {
         test('refuses to sign the registration date "$date"', () async {
           Object? error;
           try {

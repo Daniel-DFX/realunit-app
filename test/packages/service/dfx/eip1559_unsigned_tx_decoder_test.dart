@@ -329,15 +329,58 @@ void main() {
 
       expect(tx.to, realu);
       expect(tx.value, BigInt.zero);
-      expect(() => Erc20TransferCalldataDecoder.decode(tx.data), returnsNormally);
-      final call = Erc20TransferCalldataDecoder.decode(tx.data);
+      expect(tx.nonce, BigInt.from(7));
+      expect(() => Erc677TransferAndCallCalldataDecoder.decode(tx.data), returnsNormally);
+      final call = Erc677TransferAndCallCalldataDecoder.decode(tx.data);
       expect(call.recipient, brokerbot);
       expect(call.amountWei, shares);
+      expect(call.callData, isEmpty);
+    });
+
+    test('decodes a non-empty bytes argument', () {
+      final call = Erc677TransferAndCallCalldataDecoder.decode(
+        transferAndCallCalldata(brokerbot, shares, tail: Uint8List.fromList([0x01, 0x02])),
+      );
+
+      expect(call.callData, [0x01, 0x02]);
+    });
+
+    test('the ERC20 transfer decoder still rejects transferAndCall calldata', () {
+      expect(
+        () => Erc20TransferCalldataDecoder.decode(transferAndCallCalldata(brokerbot, shares)),
+        throwsA(isA<PayUnsignedTxMismatchException>()),
+      );
+    });
+
+    test('rejects ERC20 transfer calldata', () {
+      expect(
+        () => Erc677TransferAndCallCalldataDecoder.decode(
+          addressAmountCalldata(erc20TransferSelector, brokerbot, shares),
+        ),
+        throwsA(isA<PayUnsignedTxMismatchException>()),
+      );
+    });
+
+    test('rejects non-zero padding after the bytes argument', () {
+      final data = transferAndCallCalldata(brokerbot, shares, tail: Uint8List.fromList([0x01]));
+      data[data.length - 1] = 0x01;
+      expect(
+        () => Erc677TransferAndCallCalldataDecoder.decode(data),
+        throwsA(isA<PayUnsignedTxMismatchException>()),
+      );
+    });
+
+    test('rejects extra words after the bytes argument', () {
+      final data = Uint8List.fromList([...transferAndCallCalldata(brokerbot, shares), ...Uint8List(32)]);
+      expect(
+        () => Erc677TransferAndCallCalldataDecoder.decode(data),
+        throwsA(isA<PayUnsignedTxMismatchException>()),
+      );
     });
 
     test('rejects a data offset other than 96', () {
       expect(
-        () => Erc20TransferCalldataDecoder.decode(
+        () => Erc677TransferAndCallCalldataDecoder.decode(
           transferAndCallCalldata(brokerbot, shares, offset: BigInt.from(64)),
         ),
         throwsA(isA<PayUnsignedTxMismatchException>()),
@@ -347,7 +390,7 @@ void main() {
     test('rejects calldata without the bytes length word', () {
       final full = transferAndCallCalldata(brokerbot, shares);
       expect(
-        () => Erc20TransferCalldataDecoder.decode(Uint8List.sublistView(full, 0, 100)),
+        () => Erc677TransferAndCallCalldataDecoder.decode(Uint8List.sublistView(full, 0, 100)),
         throwsA(isA<PayUnsignedTxMismatchException>()),
       );
     });
@@ -361,7 +404,7 @@ void main() {
         '${uintWord(BigInt.from(64))}',
       );
       expect(
-        () => Erc20TransferCalldataDecoder.decode(data),
+        () => Erc677TransferAndCallCalldataDecoder.decode(data),
         throwsA(isA<PayUnsignedTxMismatchException>()),
       );
     });
@@ -370,7 +413,7 @@ void main() {
       final data = transferAndCallCalldata(brokerbot, shares);
       data[4] = 0x01;
       expect(
-        () => Erc20TransferCalldataDecoder.decode(data),
+        () => Erc677TransferAndCallCalldataDecoder.decode(data),
         throwsA(isA<PayUnsignedTxMismatchException>()),
       );
     });

@@ -404,6 +404,7 @@
   "sellBitboxSwapping": "Tausch on-chain. Bestätigen Sie auf der Bitbox.",
   "sellBitboxSwapTitle": "REALU → ZCHF tauschen",
   "sellBitboxSwapTo": "Sie erhalten",
+  "sellBitboxTransactionMismatch": "Diese Transaktionen entsprechen nicht dem bestätigten Verkauf. Es wurde nichts signiert. Bitte starten Sie den Verkauf erneut.",
   "sellBitboxWaitingForEth": "Gasgebühren werden angefordert",
   "sellBitboxWaitingForEthDescription": "Ein kleiner ETH-Betrag wird an Ihr Wallet gesendet, um die Transaktionsgebühren zu decken. Dies kann einige Minuten dauern.",
   "sellConfirmAuthorizationRejected": "Der Verkauf wurde nicht gesendet. Die Freigabe passt nicht zum bestätigten Betrag oder läuft nicht innerhalb von 30 Minuten ab.",

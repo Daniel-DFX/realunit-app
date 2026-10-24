@@ -202,7 +202,7 @@ void main() {
     );
     expect(creds.signCallCount, 0, reason: 'expected 0 sign calls');
     expect(broadcasts, isEmpty, reason: 'expected 0 broadcasts');
-    expect(cubit.state, isA<SellBitboxError>());
+    expect(cubit.state, isA<SellBitboxTransactionMismatch>());
   }
 
   group('BitBox sell signs only transactions that match the confirmed quote', () {
@@ -336,9 +336,29 @@ void main() {
   });
 
   group('refuses to sign transactions whose fee exceeds the quoted gas', () {
-    // The quote's requiredGasEth covers maxFeePerGas x gasLimit of both
-    // transactions together; the valid fixture uses 0.0009 of the 0.001 ETH.
+    // maxFeePerGas x gasLimit of both transactions together may be at most
+    // twice the quote's requiredGasEth (0.001 ETH); the valid fixture uses 0.0009.
     final highFee = BigInt.from(200000000000); // 200 gwei
+
+    test('signs when the gas price rose but stays within twice the quoted gas', () async {
+      final raised = BigInt.from(4000000000); // 4 gwei: 0.0018 ETH for both
+
+      final cubit = await runSell(
+        swap: _validSwap().copyWith(maxFeePerGas: raised),
+        deposit: _validDeposit().copyWith(maxFeePerGas: raised),
+      );
+
+      expect(cubit.state, isA<SellBitboxSuccess>());
+      expect(creds.signCallCount, 2);
+    });
+
+    test('fee just above twice the quoted gas', () async {
+      final raised = BigInt.from(4500000000); // 4.5 gwei: 0.002025 ETH for both
+      await expectRefused(
+        swap: _validSwap().copyWith(maxFeePerGas: raised),
+        deposit: _validDeposit().copyWith(maxFeePerGas: raised),
+      );
+    });
 
     test('swap fee above the quoted gas', () async {
       await expectRefused(
