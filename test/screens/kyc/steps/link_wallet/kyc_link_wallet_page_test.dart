@@ -332,7 +332,7 @@ void main() {
 
   group('$KycLinkWalletPage shows every signed field before the sign action', () {
     // Distinct values per field so one field cannot satisfy another's finder.
-    const signedUserData = RealUnitUserDataDto(
+    RealUnitUserDataDto signedUserData({bool swissTaxResidence = true}) => RealUnitUserDataDto(
       email: 'ada@example.com',
       name: 'Ada Lovelace',
       type: 'HUMAN',
@@ -343,7 +343,7 @@ void main() {
       addressPostalCode: '8001',
       addressCity: 'Zurich',
       addressCountry: 'CH',
-      swissTaxResidence: true,
+      swissTaxResidence: swissTaxResidence,
       lang: 'de',
       kycData: _kycData,
     );
@@ -366,7 +366,7 @@ void main() {
       'postal code': ['8001'],
       'city': ['Zurich'],
       'country': [RegExp(r'\bCH\b'), 'Switzerland'],
-      'Swiss tax residence': [RegExp('tax residen', caseSensitive: false)],
+      'Swiss tax residence': [RegExp(r'^Yes$')],
       'account type': [
         'HUMAN',
         RegExp('individual person|natural person', caseSensitive: false),
@@ -378,7 +378,7 @@ void main() {
         await tester.pumpApp(
           BlocProvider<KycCubit>.value(
             value: kycCubit,
-            child: const KycLinkWalletPage(userData: signedUserData),
+            child: KycLinkWalletPage(userData: signedUserData()),
           ),
           locale: const Locale('en'),
         );
@@ -397,5 +397,18 @@ void main() {
         );
       });
     }
+
+    testWidgets('shows a Swiss tax residence that is not set as No', (tester) async {
+      await tester.pumpApp(
+        BlocProvider<KycCubit>.value(
+          value: kycCubit,
+          child: KycLinkWalletPage(userData: signedUserData(swissTaxResidence: false)),
+        ),
+        locale: const Locale('en'),
+      );
+
+      expect(find.text('No'), findsOneWidget);
+      expect(find.text('Yes'), findsNothing);
+    });
   });
 }

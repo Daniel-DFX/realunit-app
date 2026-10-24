@@ -333,6 +333,18 @@ void main() {
     test('deposit nonce that does not follow the swap nonce', () async {
       await expectRefused(deposit: _validDeposit().copyWith(nonce: _swapNonce));
     });
+
+    test('deposit for a chain other than the app chain', () async {
+      await expectRefused(deposit: _validDeposit().copyWith(chainId: 11155111));
+    });
+
+    test('deposit that is not a type 2 transaction', () async {
+      await expectRefused(deposit: _validDeposit().copyWith(typeByte: 0x01));
+    });
+
+    test('deposit with bytes after the RLP payload', () async {
+      await expectRefused(deposit: _validDeposit().copyWith(trailingHex: 'ff'));
+    });
   });
 
   group('refuses to sign transactions whose fee exceeds the quoted gas', () {
@@ -350,6 +362,27 @@ void main() {
 
       expect(cubit.state, isA<SellBitboxSuccess>());
       expect(creds.signCallCount, 2);
+    });
+
+    test('signs when the fee is exactly twice the quoted gas', () async {
+      // 350000 x 4 gwei + 100000 x 6 gwei = 0.002 ETH
+      final cubit = await runSell(
+        swap: _validSwap().copyWith(maxFeePerGas: BigInt.from(4000000000)),
+        deposit: _validDeposit().copyWith(maxFeePerGas: BigInt.from(6000000000)),
+      );
+
+      expect(cubit.state, isA<SellBitboxSuccess>());
+      expect(creds.signCallCount, 2);
+    });
+
+    test('fee one gas unit above twice the quoted gas', () async {
+      await expectRefused(
+        swap: _validSwap().copyWith(maxFeePerGas: BigInt.from(4000000000)),
+        deposit: _validDeposit().copyWith(
+          maxFeePerGas: BigInt.from(6000000000),
+          gasLimit: _depositGasLimit + 1,
+        ),
+      );
     });
 
     test('fee just above twice the quoted gas', () async {
