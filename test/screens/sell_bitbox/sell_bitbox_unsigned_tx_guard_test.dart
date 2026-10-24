@@ -53,7 +53,10 @@ final _gasPrice = BigInt.from(2000000000); // 2 gwei
 const _swapGasLimit = 350000;
 const _depositGasLimit = 100000;
 
-SellPaymentInfo _quote({double? zchfAmount = _zchfAmount}) => SellPaymentInfo(
+SellPaymentInfo _quote({
+  double? zchfAmount = _zchfAmount,
+  double requiredGasEth = _requiredGasEth,
+}) => SellPaymentInfo(
   id: 42,
   eip7702: Eip7702Data.fromJson(_eip7702Json()),
   amount: _shares,
@@ -66,7 +69,7 @@ SellPaymentInfo _quote({double? zchfAmount = _zchfAmount}) => SellPaymentInfo(
   tokenAddress: _realuContract,
   chainId: _chainId,
   ethBalance: 1.0,
-  requiredGasEth: _requiredGasEth,
+  requiredGasEth: requiredGasEth,
   zchfAmount: zchfAmount,
 );
 
@@ -398,6 +401,27 @@ void main() {
         swap: _validSwap().copyWith(maxFeePerGas: highFee),
       );
     });
+
+    for (final requiredGasEth in const [-0.001, 1e-19]) {
+      test('quote with quoted gas $requiredGasEth ETH', () async {
+        final cubit = await runSell(
+          swap: _validSwap(),
+          deposit: _validDeposit(),
+          quote: _quote(requiredGasEth: requiredGasEth),
+        );
+
+        expect(creds.signCallCount, 0, reason: 'expected 0 sign calls');
+        expect(broadcasts, isEmpty, reason: 'expected 0 broadcasts');
+        expect(
+          cubit.state,
+          isA<SellBitboxTransactionMismatch>().having(
+            (s) => s.message,
+            'message',
+            contains('quoted gas'),
+          ),
+        );
+      });
+    }
 
     test('deposit fee above the quoted gas', () async {
       await expectRefused(
