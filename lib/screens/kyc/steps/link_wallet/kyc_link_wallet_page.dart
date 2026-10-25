@@ -134,6 +134,7 @@ class _LinkWalletBody extends StatelessWidget {
         child: ScrollableActionsLayout(
           centerBody: false,
           body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: 16.0,
             children: [
               const SizedBox(height: 16.0),
